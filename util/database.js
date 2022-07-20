@@ -1,23 +1,34 @@
 import { MongoClient } from "mongodb";
-import { createRouter } from "next-connect";
 
-const client = new MongoClient(
-  "mongodb+srv://yuqizhou:Whan5201314!@cluster0.wfb8v.mongodb.net/?retryWrites=true&w=majority",
-    {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    }
-);
+const MONGODB_URL = process.env.MONGODB;
+const DB = process.env.DB_NAME;
 
-const database = async (req, res, next) => {
-    if (!client.isConnected()) await client.connect();
-    req.dbClient = client;
-    req.db = client.db();
-    return next();
+let client = null;
+let db = null;
+
+export async function database() {
+  if (client && db) {
+    return {
+      client,
+      db,
+    };
+  }
+
+  const options = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  };
+
+  client = new MongoClient(
+    "mongodb+srv://yuqizhou:zqQ5FjkkB6pRmMHb@cluster0.wfb8v.mongodb.net/?retryWrites=true&w=majority",
+    options
+  );
+  await client.connect();
+
+  db = client.db(DB);
+
+  return {
+    client,
+    db,
+  };
 }
-
-const middleware = createRouter();
-
-middleware.use(database);
-
-export default middleware;

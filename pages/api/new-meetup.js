@@ -1,13 +1,31 @@
 // our-domain.com/api/new-meetup
-import { createRouter } from 'next-connect';
-import middleware from "../../util/database";
-import {postNewMeetup} from "../../controllers/meetup";
+import prisma from "../../lib/prisma.js";
 
-const handler = createRouter();
+export default function handler(req, res) {
+  switch (req.method) {
+    case "POST":
+      return addNewMeetup(req, res);
+    default:
+  }
+}
 
-handler.use(middleware);
-
-// POST /api/new-meetup
-handler.post(postNewMeetup);
-
-export default handler;
+async function addNewMeetup(req, res) {
+  try {
+    const { title, image, description } = req.body;
+    const result = await prisma.meetups.create({
+      data: {
+        title,
+        image,
+        description,
+      },
+    });
+    return res.status(201).json({
+      message: "Add new meetup successfully",
+      data: result,
+    });
+  } catch (e) {
+    return res.status(500).json({
+      message: new Error(e).message,
+    });
+  }
+}

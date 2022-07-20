@@ -1,52 +1,64 @@
 // our-domain.com/{meetupId}
 import {Fragment} from "react";
 import MeetupDetail from "../../components/meetups/MeetupDetail";
-
-const defaultMeetup = {
-    id: "m1",
-    title: "LOL",
-    imageUrl:
-        "https://tr.rbxcdn.com/539f164bbfaed8f12855b3e0cc0baccf/500/280/Image/Jpeg",
-    description: "Anime girl 1",
-};
+import prisma from "../../lib/prisma.js";
+import Head from "next/head.js";
 
 function MeetupDetails(props) {
+  const {meetupDetail} = props;
+  const {title, description} = meetupDetail;
 
-    return (
-        <Fragment>
-            <MeetupDetail {...defaultMeetup} />
-        </Fragment>
-    );
+  return (
+      <Fragment>
+        <Head>
+          <title>{title}</title>
+          <meta name="description" content={description}/>
+        </Head>
+        <MeetupDetail {...meetupDetail} />
+      </Fragment>
+  );
 }
 
 // If a page has Dynamic Routes and uses getStaticProps, it needs to define a list of paths to be statically generated.
 // getStaticPaths must be used with getStaticProps. You cannot use it with getServerSideProps.
 export async function getStaticPaths() {
-    return {
-        fallback: false,
-        paths: [
-            {
-                params: {
-                    meetupId: 'm1'
-                }
-            },
-            {
-                params: {
-                    meetupId: 'm2'
-                }
-            }
-        ]
-    }
+  const meetups = await prisma.meetups.findMany();
+
+  return {
+    fallback: false,
+    paths: meetups.map((meetup) => ({
+      params: { meetupId: meetup.id.toString() },
+    })),
+  };
 }
 
 export async function getStaticProps(context) {
-    const {meetupId} = context.params;
-    console.log(meetupId);
-    return {
-        props: {
-            meetupDetail: {...defaultMeetup}
-        }
-    }
+  const { meetupId } = context.params;
+  const meetUp = await prisma.meetups.findUnique({
+    where: {
+      id: meetupId,
+    },
+  });
+  return {
+    props: {
+      meetupDetail: { ...meetUp },
+    },
+  };
 }
+
+// SSR
+/*export async function getServerSideProps(context) {
+  const { meetupId } = context.params;
+  const meetupDetail = await prisma.meetups.findUnique({
+    where: {
+      id: meetupId,
+    },
+  });
+  return {
+    props: {
+      meetupDetail,
+    },
+  };
+}*/
 
 export default MeetupDetails;

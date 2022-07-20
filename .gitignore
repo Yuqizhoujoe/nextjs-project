@@ -9,3 +9,5 @@ gen
 
 .next
 /node_modules
+pages/.env
+.gitignore
